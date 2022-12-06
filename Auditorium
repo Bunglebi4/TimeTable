@@ -1,8 +1,0 @@
-class Auditorium:
-    def __init__(self, type_of_auditorium, number, is_empty):
-        self.type_of_auditorium = type_of_auditorium
-        self.number = number
-        self.is_empty = False
-
-    def fill(self):
-        self.is_empty = True
