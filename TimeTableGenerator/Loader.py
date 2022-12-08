@@ -12,6 +12,7 @@ class Loader:
         self.groups = []
         self.teachers = []
         self.auditorium = []
+        self.all_subjects = []
 
     def load(self, file_name):
         with open(file_name, encoding='utf-8') as file:
@@ -23,6 +24,7 @@ class Loader:
                                      teacher['Workload']) for teacher in data["Teacher"]]
             self.auditorium = [Auditorium(auditorium["Number"],
                                           auditorium["Type"]) for auditorium in data["Auditorium"]]
+            self.all_subjects = list(set(sum([teacher["Subjects"] for teacher in data["Teacher"]], [])))
 
     def make_lessons(self):
         for group in self.groups:
