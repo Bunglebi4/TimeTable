@@ -1,19 +1,23 @@
 from .Loader import Loader
 from random import choice
 
+
 class TimeTable:
     def __init__(self, input_file):
         self.matrix = None
         self.free = []
+        self.used = []
         self.price = 0
         self.loader = Loader()
         self.loader.load(input_file)
+        self.overlay = 0
+
+        self.best_score = 500
 
     def set_up(self):
         w, h = len(self.loader.auditorium), 36  # 6 (workdays) * 6 (work hours) = 36
         self.matrix = [[None for x in range(w)] for y in range(h)]
 
-        # initialise free dict as all the fields from matrix
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
                 self.free.append((i, j))
@@ -23,10 +27,11 @@ class TimeTable:
         for i, lesson in enumerate(self.loader.total_lessons):
             available_auditorium = [j for j, el in enumerate(self.loader.auditorium)
                                     if el.is_correct_auditorium(lesson)]
+
             available_time = []
             for k, one_time in enumerate(self.matrix):
-                groups = [self.loader.total_lessons[j].group for j in one_time if j is not None]
-                teachers = [self.loader.total_lessons[j].teacher for j in one_time if j is not None]
+                groups = [j.group for j in one_time if j is not None]
+                teachers = [j.teacher for j in one_time if j is not None]
 
                 if lesson.group not in groups and lesson.teacher not in teachers:
                     available_time.append(k)
@@ -35,7 +40,8 @@ class TimeTable:
             coords = filter(lambda coord: coord[0] in available_time, coords)
             x, y = choice(list(coords))
             self.free.remove((x, y))
-            self.matrix[x][y] = i
+            self.used.append((x, y))
+            self.matrix[x][y] = lesson
 
     def show_timetable(self):
         for i, lesson in enumerate(self.loader.total_lessons):
@@ -69,6 +75,8 @@ class TimeTable:
 
     def costs(self):
         days = []
+        self.price = 0
+        self.overlay = 0
         for start_of_day in range(0, 31, 6):
             day = []
             day_array_of_groups = []
@@ -76,7 +84,7 @@ class TimeTable:
                 day.append(self.matrix[i])
                 for j in range(len(self.loader.auditorium)):
                     if self.matrix[i][j] is not None:
-                        day_array_of_groups.append(self.loader.total_lessons[self.matrix[i][j]].group)
+                        day_array_of_groups.append(self.matrix[i][j].group)
             days.append(day)
             day.clear()
             for group in self.loader.groups:
@@ -101,7 +109,7 @@ class TimeTable:
         for groups in self.loader.groups:
             for count, pairs in enumerate(self.matrix):
                 for lesson in pairs:
-                    if lesson is not None and self.loader.total_lessons[lesson].group == groups:
+                    if lesson is not None and lesson.group == groups:
                         groups_with_pairs.setdefault(groups, []).append([count, lesson])
 
         for key in groups_with_pairs:
@@ -123,7 +131,7 @@ class TimeTable:
             for subj in self.loader.all_subjects:
                 lesson_dict[subj.lower()] = 0
             for lessons in groups_with_pairs[key]:
-                lesson_dict[self.loader.total_lessons[lessons[1]].subject] = lessons[0]
+                lesson_dict[lessons[1].subject] = lessons[0]
             for subj in self.loader.all_subjects:
                 if subj.lower()[-1] == "л":
                     lab = None
@@ -139,3 +147,22 @@ class TimeTable:
                                 self.price += 1
                     else:
                         self.price += 1
+
+    def make_mutation(self):
+        old_x, old_y = choice(self.used)
+        new_x, new_y = choice(self.free)
+        lesson = self.matrix[old_x][old_y]
+        self.matrix[old_x][old_y] = None
+        self.matrix[new_x][new_y] = lesson
+        self.costs()
+        if self.price < self.best_score and self.overlay == 0:
+            self.best_score = self.price
+            self.used.remove((old_x, old_y))
+            self.used.append((new_x, new_y))
+            self.free.remove((new_x, new_y))
+            self.free.append((old_x, old_y))
+        else:
+            self.matrix[old_x][old_y] = lesson
+            self.matrix[new_x][new_y] = None
+
+

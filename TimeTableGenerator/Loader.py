@@ -37,6 +37,6 @@ class Loader:
                         selected_teacher.set_lesson(lesson, group)
                         self.total_lessons.append(Lesson(group, lesson, selected_teacher))
                     else:
-                        print(f'{group} has not available teachers for {lesson}')
+                        raise f'{group} has not available teachers for {lesson}'
         print('All of lesson was created')
 

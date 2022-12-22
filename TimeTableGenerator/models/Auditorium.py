@@ -15,4 +15,3 @@ class Auditorium:
 
     def __format__(self, format_spec):
         return str(self).__format__(format_spec)
-
