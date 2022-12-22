@@ -25,23 +25,26 @@ class TimeTable:
     def start_fill(self):
         self.loader.make_lessons()
         for i, lesson in enumerate(self.loader.total_lessons):
-            available_auditorium = [j for j, el in enumerate(self.loader.auditorium)
-                                    if el.is_correct_auditorium(lesson)]
-
-            available_time = []
-            for k, one_time in enumerate(self.matrix):
-                groups = [j.group for j in one_time if j is not None]
-                teachers = [j.teacher for j in one_time if j is not None]
-
-                if lesson.group not in groups and lesson.teacher not in teachers:
-                    available_time.append(k)
-
-            coords = filter(lambda coord: coord[1] in available_auditorium, self.free)
-            coords = filter(lambda coord: coord[0] in available_time, coords)
-            x, y = choice(list(coords))
+            x, y = choice(list(self.get_available_coord(lesson)))
             self.free.remove((x, y))
             self.used.append((x, y))
             self.matrix[x][y] = lesson
+
+    def get_available_coord(self, lesson):
+        available_auditorium = [j for j, el in enumerate(self.loader.auditorium)
+                                if el.is_correct_auditorium(lesson)]
+
+        available_time = []
+        for k, one_time in enumerate(self.matrix):
+            groups = [j.group for j in one_time if j is not None]
+            teachers = [j.teacher for j in one_time if j is not None]
+
+            if lesson.group not in groups and lesson.teacher not in teachers:
+                available_time.append(k)
+
+        coords = filter(lambda coord: coord[1] in available_auditorium, self.free)
+        coords = filter(lambda coord: coord[0] in available_time, coords)
+        return coords
 
     def show_timetable(self):
         for i, lesson in enumerate(self.loader.total_lessons):
@@ -150,8 +153,9 @@ class TimeTable:
 
     def make_mutation(self):
         old_x, old_y = choice(self.used)
-        new_x, new_y = choice(self.free)
         lesson = self.matrix[old_x][old_y]
+
+        new_x, new_y = choice(list(self.get_available_coord(lesson)))
         self.matrix[old_x][old_y] = None
         self.matrix[new_x][new_y] = lesson
         self.costs()

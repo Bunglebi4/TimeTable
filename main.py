@@ -12,7 +12,7 @@ for i in range(iterations):
         print(f"{i}/{iterations}")
     time_table.make_mutation()
     score.append(time_table.best_score)
-
+time_table.show_timetable()
 plt.plot(score)
 plt.xlabel('Iteration')
 plt.ylabel('TimeTable cost')
